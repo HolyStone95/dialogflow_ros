@@ -29,6 +29,9 @@ class GspeechClient(object):
         # "Sorry, what was that?", \
         # "One more time?", \
         self.repeat_intent = ['EOC']
+        self.default_fallback = ['Default fallback']
+        self.lost_replies = 0
+        self.max_lostrep = 3
 
         # Audio stream input setup
         FORMAT = pyaudio.paInt16
@@ -122,7 +125,11 @@ class GspeechClient(object):
                 resp = resp_tmp.fulfillment_text
                 intent = resp_tmp.intent
                 self.text_pub.publish(resp)
-
+            if intent in self.default_fallback:
+                self.lost_replies += 1
+            else:
+                self.lost_replies = 0
+                
             return intent not in self.repeat_intent, resp
 
     def gspeech_client(self):
@@ -141,7 +148,7 @@ class GspeechClient(object):
         dc = DialogflowClient()
         repeat = True
         print("listening for msg")
-        while repeat and not rospy.is_shutdown():
+        while repeat and not rospy.is_shutdown() and self.lost_replies < self.max_lostrep:
             #responses=openmic_cli()
             responses=testmic_cli()
             print("Message taken")
@@ -150,8 +157,13 @@ class GspeechClient(object):
             #dr = DialogflowRequest(query_text=transcript)
             #resp1 = dc.detect_intent_text(dr)
 
-        final_order = text 
-        rospy.loginfo("Final order:" + str(final_order))
+        if self.lost_replies == self.max_lostrep:
+            rospy.loginfo("Sorry I could not understand you")
+            final_order = ":"
+        elif:
+            final_order = text 
+            rospy.loginfo("Final order:" + str(final_order))
+
         return final_order   
 
     def shutdown(self):
