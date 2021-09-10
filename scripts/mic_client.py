@@ -141,7 +141,7 @@ class GspeechClient(object):
         dc = DialogflowClient()
         repeat = True
         print("listening for msg")
-        for i in range(9):
+        while repeat and not rospy.is_shutdown():
             #responses=openmic_cli()
             responses=testmic_cli()
             print("Message taken")
@@ -151,7 +151,7 @@ class GspeechClient(object):
             #resp1 = dc.detect_intent_text(dr)
 
         final_order = text 
-        print("Final order:" + str(final_order))
+        rospy.loginfo("Final order:" + str(final_order))
         return final_order   
 
     def shutdown(self):
